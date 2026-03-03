@@ -622,6 +622,21 @@ body {
   <hr class="divider">
   <p style="font-size:0.85rem; color:var(--ink-muted); margin-bottom:1.5rem;">Qui êtes-vous ?</p>
   <div class="guest-grid" id="guest-grid"></div>
+  
+  <!-- Preview on login screen -->
+  <div style="max-width:700px;width:100%;margin-top:2.5rem;">
+    <hr class="divider">
+    <h2 class="section-title" style="margin-top:1.5rem;">— Les Convives —</h2>
+    <div class="status-grid" id="login-status-grid"></div>
+    
+    <hr class="divider" style="margin-top:2rem;">
+    <h2 class="section-title" style="margin-top:1.5rem;">— Le Livre d'Or —</h2>
+    <div class="comment-box" style="text-align:left;">
+      <div class="comments-list" id="login-comments-list">
+        <p style="text-align:center;color:var(--ink-muted);font-style:italic;font-size:0.85rem;">Aucun message pour le moment</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MAIN SCREEN -->
@@ -765,8 +780,26 @@ async function initBlob() {
 }
 
 async function saveData() {
-  if (!BLOB_ID) return;
   try {
+    // Merge: reload remote first, apply our changes on top
+    const res = await fetch(`${API}/${BLOB_ID}`);
+    if (res.ok) {
+      const remote = await res.json();
+      // Merge selections: keep remote, override only current guest
+      if (currentGuest) {
+        remote.selections = remote.selections || {};
+        remote.selections[currentGuest] = DATA.selections[currentGuest];
+        // Merge contributions: keep remote, override only current guest
+        remote.contributions = remote.contributions || {};
+        remote.contributions[currentGuest] = DATA.contributions?.[currentGuest] || [];
+        // Merge comments: union by timestamp
+        remote.comments = remote.comments || [];
+        const remoteTs = new Set(remote.comments.map(c => c.at));
+        const newComments = (DATA.comments || []).filter(c => !remoteTs.has(c.at));
+        remote.comments = [...remote.comments, ...newComments];
+        DATA = remote;
+      }
+    }
     await fetch(`${API}/${BLOB_ID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -776,11 +809,16 @@ async function saveData() {
 }
 
 async function loadData() {
-  if (!BLOB_ID) return;
   try {
     const res = await fetch(`${API}/${BLOB_ID}`);
-    if (res.ok) DATA = await res.json();
-  } catch (e) {}
+    if (res.ok) {
+      const remote = await res.json();
+      if (!remote.contributions) remote.contributions = {};
+      if (!remote.comments) remote.comments = [];
+      if (!remote.selections) remote.selections = {};
+      DATA = remote;
+    }
+  } catch (e) { console.warn('Load failed', e); }
 }
 
 async function poll() {
@@ -924,12 +962,58 @@ async function removeContrib(index) {
   await saveData();
 }
 
+function renderLoginPreview() {
+  // Status on login screen
+  const loginGrid = document.getElementById('login-status-grid');
+  if (loginGrid) {
+    loginGrid.innerHTML = GUESTS.map(g => {
+      const s = DATA.selections[g.id] || {};
+      const entree = MENU.entrees.find(d => d.id === s.entrees);
+      const plat = MENU.plats.find(d => d.id === s.plats);
+      return `
+        <div class="status-card">
+          <div class="name">${g.name}</div>
+          <div class="role">${g.role}</div>
+          <div class="choice">
+            ${entree ? `<em>Entrée:</em> ${entree.name.split(',')[0]}` : '<span class="no-choice">Entrée non choisie</span>'}
+            <br>
+            ${plat ? `<em>Plat:</em> ${plat.name.split(',')[0]}` : '<span class="no-choice">Plat non choisi</span>'}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  // Comments on login screen
+  const loginComments = document.getElementById('login-comments-list');
+  if (loginComments) {
+    if (!DATA.comments || DATA.comments.length === 0) {
+      loginComments.innerHTML = '<p style="text-align:center;color:var(--ink-muted);font-style:italic;font-size:0.85rem;">Aucun message pour le moment</p>';
+    } else {
+      loginComments.innerHTML = DATA.comments.slice().reverse().map(c => {
+        const guest = GUESTS.find(g => g.id === c.from);
+        const date = new Date(c.at);
+        const timeStr = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="comment-item">
+            <div class="comment-avatar ${guest?.chef ? 'chef' : ''}">${(guest?.name || '?')[0]}</div>
+            <div class="comment-body">
+              <div class="comment-meta"><strong>${guest?.name || 'Inconnu'}</strong> · ${timeStr}</div>
+              <div class="comment-text">${escapeHtml(c.text)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
 function renderAll() {
   renderDishes('entrees', 'entrees');
   renderDishes('plats', 'plats');
   renderStatus();
   renderContributions();
   renderComments();
+  renderLoginPreview();
 }
 
 function escapeHtml(str) {
@@ -994,10 +1078,14 @@ function logout() {
 (async function init() {
   renderGuestGrid();
   await initBlob();
+  renderLoginPreview();
   // Auto-login
   const saved = localStorage.getItem('diner-mathys-guest');
   if (saved && GUESTS.find(g => g.id === saved)) {
     login(saved);
+  } else {
+    // Poll login screen too
+    setInterval(async () => { await loadData(); renderLoginPreview(); }, 8000);
   }
   // Handle Enter in comment
   document.getElementById('comment-input').addEventListener('keydown', e => {
