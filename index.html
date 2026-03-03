@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dîner chez Mathys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #b8860b;
+  --gold-light: #d4a843;
+  --cream: #faf6f0;
+  --cream-dark: #f0e8da;
+  --ink: #2c1810;
+  --ink-light: #5a4a3a;
+  --ink-muted: #8a7a6a;
+  --wine: #722f37;
+  --wine-light: #9b4d56;
+  --white: #fffdf9;
+  --shadow: rgba(44, 24, 16, 0.08);
+  --shadow-md: rgba(44, 24, 16, 0.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Raleway', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ORNAMENT HELPERS */
+.ornament {
+  text-align: center;
+  color: var(--gold);
+  font-size: 1.2rem;
+  letter-spacing: 0.5em;
+  margin: 1rem 0;
+  user-select: none;
+}
+
+.divider {
+  width: 60%;
+  max-width: 300px;
+  margin: 1.5rem auto;
+  border: none;
+  border-top: 1px solid var(--gold-light);
+  opacity: 0.4;
+}
+
+/* SCREEN: GUEST SELECT */
+#screen-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+  animation: fadeIn 0.8s ease;
+}
+
+#screen-login h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  color: var(--ink);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+#screen-login .subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  color: var(--ink-muted);
+  margin-bottom: 2rem;
+}
+
+.guest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  max-width: 700px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.guest-btn {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.guest-btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.guest-btn .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.guest-btn .avatar.chef { background: var(--wine); }
+
+.guest-btn span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.guest-btn small {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* SCREEN: MAIN */
+#screen-main {
+  display: none;
+  animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  padding: 3rem 2rem 1rem;
+}
+
+.header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.header .welcome {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--ink-muted);
+  margin-top: 0.5rem;
+}
+
+.header .switch-guest {
+  display: inline-block;
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  color: var(--gold);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  background: none;
+  font-family: 'Raleway', sans-serif;
+}
+
+.header .switch-guest:hover { color: var(--wine); }
+
+/* CONTENT */
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+}
+
+/* MENU SECTION */
+.menu-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+/* DISH CARD */
+.dish-card {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.dish-card:hover {
+  border-color: var(--gold-light);
+  box-shadow: 0 2px 16px var(--shadow);
+}
+
+.dish-card.selected {
+  border-color: var(--gold);
+  box-shadow: 0 2px 20px var(--shadow-md);
+  background: linear-gradient(135deg, var(--white) 0%, #fdf8ee 100%);
+}
+
+.dish-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 28px;
+  height: 28px;
+  background: var(--gold);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dish-card.veg-only {
+  border-left: 3px solid #5a8f5a;
+}
+
+.dish-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  padding-right: 2rem;
+}
+
+.dish-desc {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.dish-tag {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  background: #e8f0e8;
+  color: #5a8f5a;
+}
+
+.dish-voters {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.voter-chip {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  background: var(--cream-dark);
+  color: var(--ink-light);
+  font-weight: 500;
+}
+
+/* DESSERT (no choice) */
+.dessert-card {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.dessert-card .dish-name { padding-right: 0; }
+
+/* COMMENTS */
+.comments-section {
+  margin-top: 3rem;
+}
+
+.comment-box {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.comment-box h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 1rem;
+}
+
+.comment-input-wrap {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.comment-input-wrap textarea {
+  flex: 1;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 60px;
+  color: var(--ink);
+  background: var(--cream);
+  transition: border-color 0.2s;
+}
+
+.comment-input-wrap textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.comment-input-wrap button {
+  align-self: flex-end;
+  background: var(--gold);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.comment-input-wrap button:hover { background: var(--wine); }
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comment-item {
+  display: flex;
+  gap: 0.8rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.comment-avatar.chef { background: var(--wine); }
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-meta {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.2rem;
+}
+
+.comment-meta strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.comment-text {
+  font-size: 0.85rem;
+  color: var(--ink-light);
+  line-height: 1.5;
+}
+
+/* GUEST STATUS */
+.status-section {
+  margin-top: 2.5rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.8rem;
+}
+
+.status-card {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.status-card .name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status-card .role {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--wine);
+  margin-bottom: 0.5rem;
+}
+
+.status-card .choice {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.status-card .choice em { color: var(--gold); font-style: normal; font-weight: 500; }
+
+.no-choice { opacity: 0.5; font-style: italic; }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .guest-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+  .comment-input-wrap { flex-direction: column; }
+  .comment-input-wrap button { align-self: stretch; }
+  .content { padding: 0 1rem 2rem; }
+  .header { padding: 2rem 1rem 0.5rem; }
+  .status-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* LOADING */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.pulse { animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="screen-login">
+  <h1>Menu</h1>
+  <div class="ornament">— ❧ —</div>
+  <p class="subtitle">Un dîner signé Mathys</p>
+  <hr class="divider">
+  <p style="font-size:0.85rem; color:var(--ink-muted); margin-bottom:1.5rem;">Qui êtes-vous ?</p>
+  <div class="guest-grid" id="guest-grid"></div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div id="screen-main">
+  <div class="header">
+    <h1>Menu</h1>
+    <div class="ornament">— ❧ —</div>
+    <p class="welcome" id="welcome-msg"></p>
+    <button class="switch-guest" onclick="logout()">Changer d'invité</button>
+  </div>
+
+  <div class="content">
+    <!-- ENTRÉES -->
+    <div class="menu-section">
+      <h2 class="section-title">— Entrées —</h2>
+      <div id="entrees"></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- PLATS -->
+    <div class="menu-section">
+      <h2 class="section-title">— Plats —</h2>
+      <div id="plats"></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- DESSERT -->
+    <div class="menu-section">
+      <h2 class="section-title">— Dessert —</h2>
+      <div class="dessert-card">
+        <p class="dish-name">Mousse au chocolat, gros sel et touche de piment</p>
+        <p class="dish-desc">Servi à tous les convives</p>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- STATUS -->
+    <div class="status-section">
+      <h2 class="section-title">— Les Convives —</h2>
+      <div class="status-grid" id="status-grid"></div>
+    </div>
+
+    <!-- COMMENTS -->
+    <div class="comments-section">
+      <hr class="divider">
+      <h2 class="section-title" style="margin-top:1.5rem;">— Le Livre d'Or —</h2>
+      <div class="comment-box">
+        <div class="comment-input-wrap">
+          <textarea id="comment-input" placeholder="Un mot pour le chef ou les convives..."></textarea>
+          <button onclick="postComment()">Envoyer</button>
+        </div>
+        <div class="comments-list" id="comments-list">
+          <p class="loading pulse">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Avec amour, pour Mathys & ses invités</div>
+</div>
+
+<script>
+// ============ CONFIG ============
+const GUESTS = [
+  { id: 'mathys', name: 'Mathys', role: 'Le Chef', chef: true },
+  { id: 'camille', name: 'Camille', role: 'Invité·e' },
+  { id: 'constance', name: 'Constance', role: 'Invitée' },
+  { id: 'antonin', name: 'Antonin', role: 'Invité' },
+  { id: 'elie', name: 'Elie', role: 'Invité' },
+];
+
+const MENU = {
+  entrees: [
+    {
+      id: 'e1',
+      name: 'Raviole ouverte de poireau brûlé',
+      desc: 'Crème de comté et jus végétal corsé',
+      veg: true
+    },
+    {
+      id: 'e2',
+      name: 'Bœuf effiloché laqué',
+      desc: 'Mousseline de céleri et vinaigre de Xérés',
+      veg: false
+    }
+  ],
+  plats: [
+    {
+      id: 'p1',
+      name: 'Chou farci aux champignons et oignon doux',
+      desc: 'Purée de pommes de terre fumée, jus végétal réduit',
+      veg: true
+    },
+    {
+      id: 'p2',
+      name: 'Paleron de bœuf braisé',
+      desc: 'Réduction vin rouge–échalote, écrasé de pommes de terre au beurre noisette',
+      veg: false
+    }
+  ]
+};
+
+// ============ DATA STORE (jsonblob.com) ============
+let BLOB_ID = null;
+const BLOB_KEY = 'diner-mathys-blob-id';
+const API = 'https://jsonblob.com/api/jsonBlob';
+
+function defaultData() {
+  return {
+    selections: {},
+    comments: []
+  };
+}
+
+let DATA = defaultData();
+let currentGuest = null;
+let pollTimer = null;
+
+async function initBlob() {
+  BLOB_ID = localStorage.getItem(BLOB_KEY);
+  if (BLOB_ID) {
+    try {
+      const res = await fetch(`${API}/${BLOB_ID}`);
+      if (res.ok) { DATA = await res.json(); return; }
+    } catch (e) {}
+  }
+  // Create new blob
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(defaultData())
+  });
+  BLOB_ID = res.headers.get('Location')?.split('/').pop() || res.headers.get('x-jsonblob');;
+  if (!BLOB_ID) {
+    // Fallback: extract from response URL
+    const url = res.url;
+    BLOB_ID = url.split('/').pop();
+  }
+  localStorage.setItem(BLOB_KEY, BLOB_ID);
+  DATA = defaultData();
+}
+
+async function saveData() {
+  if (!BLOB_ID) return;
+  try {
+    await fetch(`${API}/${BLOB_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA)
+    });
+  } catch (e) { console.warn('Save failed', e); }
+}
+
+async function loadData() {
+  if (!BLOB_ID) return;
+  try {
+    const res = await fetch(`${API}/${BLOB_ID}`);
+    if (res.ok) DATA = await res.json();
+  } catch (e) {}
+}
+
+async function poll() {
+  await loadData();
+  renderAll();
+}
+
+// ============ RENDER ============
+function renderGuestGrid() {
+  const grid = document.getElementById('guest-grid');
+  grid.innerHTML = GUESTS.map(g => `
+    <div class="guest-btn" onclick="login('${g.id}')">
+      <div class="avatar ${g.chef ? 'chef' : ''}">${g.name[0]}</div>
+      <span>${g.name}</span>
+      <small>${g.role}</small>
+    </div>
+  `).join('');
+}
+
+function renderDishes(category, containerId) {
+  const container = document.getElementById(containerId);
+  const mySelections = DATA.selections[currentGuest] || {};
+  
+  container.innerHTML = MENU[category].map(dish => {
+    const selected = mySelections[category] === dish.id;
+    const voters = GUESTS.filter(g => {
+      const s = DATA.selections[g.id];
+      return s && s[category] === dish.id;
+    });
+
+    return `
+      <div class="dish-card ${selected ? 'selected' : ''} ${dish.veg ? 'veg-only' : ''}" 
+           onclick="selectDish('${category}', '${dish.id}')">
+        <p class="dish-name">${dish.name}</p>
+        <p class="dish-desc">${dish.desc}</p>
+        ${dish.veg ? '<span class="dish-tag">🌱 Végétarien</span>' : ''}
+        ${voters.length > 0 ? `
+          <div class="dish-voters">
+            ${voters.map(v => `<span class="voter-chip">${v.name}</span>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderStatus() {
+  const grid = document.getElementById('status-grid');
+  grid.innerHTML = GUESTS.map(g => {
+    const s = DATA.selections[g.id] || {};
+    const entree = MENU.entrees.find(d => d.id === s.entrees);
+    const plat = MENU.plats.find(d => d.id === s.plats);
+    
+    return `
+      <div class="status-card">
+        <div class="name">${g.name}</div>
+        <div class="role">${g.role}</div>
+        <div class="choice">
+          ${entree ? `<em>Entrée:</em> ${entree.name.split(',')[0]}` : '<span class="no-choice">Entrée non choisie</span>'}
+          <br>
+          ${plat ? `<em>Plat:</em> ${plat.name.split(',')[0]}` : '<span class="no-choice">Plat non choisi</span>'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderComments() {
+  const list = document.getElementById('comments-list');
+  if (!DATA.comments || DATA.comments.length === 0) {
+    list.innerHTML = '<p style="text-align:center;color:var(--ink-muted);font-style:italic;font-size:0.85rem;">Aucun message pour le moment</p>';
+    return;
+  }
+  list.innerHTML = DATA.comments.slice().reverse().map(c => {
+    const guest = GUESTS.find(g => g.id === c.from);
+    const date = new Date(c.at);
+    const timeStr = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="comment-item">
+        <div class="comment-avatar ${guest?.chef ? 'chef' : ''}">${(guest?.name || '?')[0]}</div>
+        <div class="comment-body">
+          <div class="comment-meta"><strong>${guest?.name || 'Inconnu'}</strong> · ${timeStr}</div>
+          <div class="comment-text">${escapeHtml(c.text)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAll() {
+  renderDishes('entrees', 'entrees');
+  renderDishes('plats', 'plats');
+  renderStatus();
+  renderComments();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ============ ACTIONS ============
+async function selectDish(category, dishId) {
+  if (!DATA.selections[currentGuest]) DATA.selections[currentGuest] = {};
+  // Toggle
+  if (DATA.selections[currentGuest][category] === dishId) {
+    delete DATA.selections[currentGuest][category];
+  } else {
+    DATA.selections[currentGuest][category] = dishId;
+  }
+  renderAll();
+  await saveData();
+}
+
+async function postComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!DATA.comments) DATA.comments = [];
+  DATA.comments.push({
+    from: currentGuest,
+    text: text,
+    at: new Date().toISOString()
+  });
+  input.value = '';
+  renderComments();
+  await saveData();
+}
+
+// ============ AUTH ============
+function login(guestId) {
+  currentGuest = guestId;
+  localStorage.setItem('diner-mathys-guest', guestId);
+  const guest = GUESTS.find(g => g.id === guestId);
+  document.getElementById('welcome-msg').textContent = guest.chef
+    ? 'Bienvenue Chef Mathys — votre table vous attend'
+    : `Bienvenue ${guest.name} — votre table vous attend`;
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-main').style.display = 'block';
+  renderAll();
+  // Poll every 8s
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(poll, 8000);
+}
+
+function logout() {
+  localStorage.removeItem('diner-mathys-guest');
+  currentGuest = null;
+  if (pollTimer) clearInterval(pollTimer);
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('screen-main').style.display = 'none';
+}
+
+// ============ INIT ============
+(async function init() {
+  renderGuestGrid();
+  await initBlob();
+  // Auto-login
+  const saved = localStorage.getItem('diner-mathys-guest');
+  if (saved && GUESTS.find(g => g.id === saved)) {
+    login(saved);
+  }
+  // Handle Enter in comment
+  document.getElementById('comment-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
+  });
+})();
+</script>
+</body>
+</html>
