@@ -752,8 +752,7 @@ const MENU = {
 };
 
 // ============ DATA STORE (jsonblob.com) ============
-const BLOB_ID = '019cb483-8b78-7ad0-936e-b149f5aabf01';
-const API = 'https://jsonblob.com/api/jsonBlob';
+const API_BASE = 'https://alfred.goblin-insen.ts.net:8877';
 
 function defaultData() {
   return {
@@ -769,10 +768,12 @@ let pollTimer = null;
 
 async function initBlob() {
   try {
-    const res = await fetch(`${API}/${BLOB_ID}`);
+    const res = await fetch(`${API_BASE}/data`);
     if (res.ok) {
       DATA = await res.json();
       if (!DATA.contributions) DATA.contributions = {};
+      if (!DATA.comments) DATA.comments = [];
+      if (!DATA.selections) DATA.selections = {};
     }
   } catch (e) {
     console.warn('Failed to load data', e);
@@ -782,17 +783,14 @@ async function initBlob() {
 async function saveData() {
   try {
     // Merge: reload remote first, apply our changes on top
-    const res = await fetch(`${API}/${BLOB_ID}`);
+    const res = await fetch(`${API_BASE}/data`);
     if (res.ok) {
       const remote = await res.json();
-      // Merge selections: keep remote, override only current guest
       if (currentGuest) {
         remote.selections = remote.selections || {};
         remote.selections[currentGuest] = DATA.selections[currentGuest];
-        // Merge contributions: keep remote, override only current guest
         remote.contributions = remote.contributions || {};
         remote.contributions[currentGuest] = DATA.contributions?.[currentGuest] || [];
-        // Merge comments: union by timestamp
         remote.comments = remote.comments || [];
         const remoteTs = new Set(remote.comments.map(c => c.at));
         const newComments = (DATA.comments || []).filter(c => !remoteTs.has(c.at));
@@ -800,7 +798,7 @@ async function saveData() {
         DATA = remote;
       }
     }
-    await fetch(`${API}/${BLOB_ID}`, {
+    await fetch(`${API_BASE}/data`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(DATA)
@@ -810,7 +808,7 @@ async function saveData() {
 
 async function loadData() {
   try {
-    const res = await fetch(`${API}/${BLOB_ID}`);
+    const res = await fetch(`${API_BASE}/data`);
     if (res.ok) {
       const remote = await res.json();
       if (!remote.contributions) remote.contributions = {};
