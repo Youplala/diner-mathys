@@ -631,6 +631,8 @@ body {
     <div class="ornament">— ❧ —</div>
     <p class="welcome" id="welcome-msg"></p>
     <button class="switch-guest" onclick="logout()">Changer d'invité</button>
+    <br>
+    <button class="switch-guest" onclick="shareLink()" style="margin-top:0.3rem;">📋 Copier le lien de partage</button>
   </div>
 
   <div class="content">
@@ -753,11 +755,21 @@ let currentGuest = null;
 let pollTimer = null;
 
 async function initBlob() {
-  BLOB_ID = localStorage.getItem(BLOB_KEY);
+  // Priority: URL hash > localStorage
+  const hashId = window.location.hash.replace('#', '').split('&').find(p => p.startsWith('blob='))?.split('=')[1];
+  BLOB_ID = hashId || localStorage.getItem(BLOB_KEY);
+  
   if (BLOB_ID) {
     try {
       const res = await fetch(`${API}/${BLOB_ID}`);
-      if (res.ok) { DATA = await res.json(); return; }
+      if (res.ok) {
+        DATA = await res.json();
+        // Ensure contributions field exists
+        if (!DATA.contributions) DATA.contributions = {};
+        localStorage.setItem(BLOB_KEY, BLOB_ID);
+        updateUrlHash();
+        return;
+      }
     } catch (e) {}
   }
   // Create new blob
@@ -766,14 +778,24 @@ async function initBlob() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(defaultData())
   });
-  BLOB_ID = res.headers.get('Location')?.split('/').pop() || res.headers.get('x-jsonblob');;
+  BLOB_ID = res.headers.get('Location')?.split('/').pop() || res.headers.get('x-jsonblob');
   if (!BLOB_ID) {
-    // Fallback: extract from response URL
     const url = res.url;
     BLOB_ID = url.split('/').pop();
   }
   localStorage.setItem(BLOB_KEY, BLOB_ID);
+  updateUrlHash();
   DATA = defaultData();
+}
+
+function updateUrlHash() {
+  if (BLOB_ID && !window.location.hash.includes('blob=')) {
+    window.location.hash = `blob=${BLOB_ID}`;
+  }
+}
+
+function getShareUrl() {
+  return `${window.location.origin}${window.location.pathname}#blob=${BLOB_ID}`;
 }
 
 async function saveData() {
@@ -992,6 +1014,15 @@ function login(guestId) {
   // Poll every 8s
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(poll, 8000);
+}
+
+function shareLink() {
+  const url = getShareUrl();
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Lien copié ! Envoie-le aux invités 🍷');
+  }).catch(() => {
+    prompt('Copie ce lien :', url);
+  });
 }
 
 function logout() {
