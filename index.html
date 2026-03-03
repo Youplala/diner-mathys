@@ -466,6 +466,117 @@ body {
 
 .no-choice { opacity: 0.5; font-style: italic; }
 
+/* CONTRIBUTIONS */
+.contributions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.contrib-card {
+  background: var(--white);
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.contrib-card .contrib-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.contrib-card .contrib-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.contrib-card .contrib-avatar.chef { background: var(--wine); }
+
+.contrib-card .contrib-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.contrib-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.contrib-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  background: var(--cream);
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+}
+
+.contrib-item .remove-btn {
+  background: none;
+  border: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 0.3rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.contrib-item .remove-btn:hover { opacity: 1; color: var(--wine); }
+
+.contrib-add {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.contrib-add input {
+  flex: 1;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-family: 'Raleway', sans-serif;
+  font-size: 0.8rem;
+  color: var(--ink);
+  background: var(--cream);
+  min-width: 0;
+}
+
+.contrib-add input:focus { outline: none; border-color: var(--gold); }
+
+.contrib-add button {
+  background: var(--gold);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.contrib-add button:hover { background: var(--wine); }
+
 /* FOOTER */
 .footer {
   text-align: center;
@@ -556,6 +667,14 @@ body {
       <div class="status-grid" id="status-grid"></div>
     </div>
 
+    <!-- CONTRIBUTIONS -->
+    <div class="contributions-section">
+      <hr class="divider">
+      <h2 class="section-title" style="margin-top:1.5rem;">— Contributions —</h2>
+      <p style="text-align:center;font-size:0.8rem;color:var(--ink-muted);margin-bottom:1.2rem;font-style:italic;">Qu'est-ce que vous ramenez ?</p>
+      <div id="contributions-grid" class="contributions-grid"></div>
+    </div>
+
     <!-- COMMENTS -->
     <div class="comments-section">
       <hr class="divider">
@@ -624,6 +743,7 @@ const API = 'https://jsonblob.com/api/jsonBlob';
 function defaultData() {
   return {
     selections: {},
+    contributions: {},
     comments: []
   };
 }
@@ -762,10 +882,65 @@ function renderComments() {
   }).join('');
 }
 
+function renderContributions() {
+  const grid = document.getElementById('contributions-grid');
+  if (!DATA.contributions) DATA.contributions = {};
+  
+  grid.innerHTML = GUESTS.map(g => {
+    const items = DATA.contributions[g.id] || [];
+    const isMe = g.id === currentGuest;
+    
+    return `
+      <div class="contrib-card">
+        <div class="contrib-header">
+          <div class="contrib-avatar ${g.chef ? 'chef' : ''}">${g.name[0]}</div>
+          <span class="contrib-name">${g.name}</span>
+        </div>
+        <div class="contrib-items">
+          ${items.length === 0 ? '<span style="font-size:0.75rem;color:var(--ink-muted);font-style:italic;">Rien pour le moment</span>' : ''}
+          ${items.map((item, i) => `
+            <div class="contrib-item">
+              <span>🍷 ${escapeHtml(item)}</span>
+              ${isMe ? `<button class="remove-btn" onclick="removeContrib(${i})">✕</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        ${isMe ? `
+          <div class="contrib-add">
+            <input type="text" id="contrib-input-${g.id}" placeholder="Ex: Vin rouge, chips..." onkeydown="if(event.key==='Enter')addContrib()">
+            <button onclick="addContrib()">+</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+async function addContrib() {
+  const input = document.getElementById(`contrib-input-${currentGuest}`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+  if (!DATA.contributions) DATA.contributions = {};
+  if (!DATA.contributions[currentGuest]) DATA.contributions[currentGuest] = [];
+  DATA.contributions[currentGuest].push(text);
+  input.value = '';
+  renderContributions();
+  await saveData();
+}
+
+async function removeContrib(index) {
+  if (!DATA.contributions?.[currentGuest]) return;
+  DATA.contributions[currentGuest].splice(index, 1);
+  renderContributions();
+  await saveData();
+}
+
 function renderAll() {
   renderDishes('entrees', 'entrees');
   renderDishes('plats', 'plats');
   renderStatus();
+  renderContributions();
   renderComments();
 }
 
